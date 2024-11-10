@@ -183,14 +183,16 @@
         var text = html.replace(/\n/gi, '').replace(/\t/gi, '').trim();
 
         // コードブロック対応
-        if (text.includes('code-start') && isCodeBlock === true) {
+        const codeStart = line.querySelector('.code-start');
+        const codeBody = line.querySelector('.code-body');
+        if (codeStart !== null && isCodeBlock === true) {
           // code-start時にisCodeBlockがtrueの場合、コードブロックが連続していると判断し、コードブロックを閉じる。
           pageTexts.push('```');
         }
-        if (isCodeBlock === false && text.includes('code-start')) {
+        if (isCodeBlock === false && codeStart !== null) {
           isCodeBlock = true;
         }
-        if (text.includes('code-start') || text.includes('code-body')) {
+        if (codeStart !== null || codeBody !== null) {
           text = codeblock(text);
           isCodeBlock = true;
         } else if (isCodeBlock === true) {
