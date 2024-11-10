@@ -22,7 +22,7 @@
         win.document.write(escapeHtml(res));
         win.document.write('</pre>');
         win.document.close();
-    }
+    };
 
     var escapeHtml = (str) => {
         str = str.replace(/&/g, '&amp;');
@@ -53,7 +53,7 @@
             r += '#';
         }
         return r;
-    }
+    };
 
     var headline = (text='') => {
         var div = document.createElement("div");
@@ -92,7 +92,7 @@
 
     var lines = document.querySelector('.lines');
     var pageTitle = lines.querySelector('.line-title .text').innerText;
-    var indentUnitWidthEm = 1.5
+    var indentUnitWidthEm = 1.5;
 
     lines = lines.querySelectorAll('.line');
     pageTexts = [];
