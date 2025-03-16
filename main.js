@@ -6,6 +6,7 @@
      * - 画像
      * - リンク
      * - 単一行コード
+     * - コードブロック
      **/
 
     var writer = (title='Title', texts=[]) => {
@@ -22,7 +23,7 @@
         win.document.write(escapeHtml(res));
         win.document.write('</pre>');
         win.document.close();
-    }
+    };
 
     var escapeHtml = (str) => {
         str = str.replace(/&/g, '&amp;');
@@ -42,6 +43,68 @@
         return indent;
     };
 
+    var guessLanguageFromFileName = (fileName='') => {
+      const extensions = {
+        js: 'javascript',
+        py: 'python',
+        java: 'java',
+        rb: 'ruby',
+        php: 'php',
+        html: 'html',
+        css: 'css',
+        cpp: 'cpp',
+        c: 'c',
+        cs: 'csharp',
+        sh: 'bash',
+        zsh: 'bash',
+        md: 'markdown',
+        json: 'json',
+        xml: 'xml',
+        yml: 'yaml',
+        yaml: 'yaml',
+        ts: 'typescript',
+        go: 'go',
+        rs: 'rust',
+        kt: 'kotlin',
+        swift: 'swift',
+      };
+      return ((fileName='') => {
+        const extension = fileName.includes('.')
+          ? fileName.split('.').pop()
+          : '';
+        return extensions[extension] || '';
+      })(fileName);
+    };
+  
+    var codeblock = (text='') => {
+      var div = document.createElement('div');
+      div.innerHTML = text;
+  
+      // code blockの開始
+      var codeStart = div.querySelector('.code-start');
+      if (codeStart !== null) {
+        var fileNameOrLanguage = codeStart.querySelector('a').innerText;
+        var language = '';
+        if (fileNameOrLanguage) {
+          var language = guessLanguageFromFileName(fileNameOrLanguage);
+        }
+        if (language) {
+          language = language + ':';
+        }
+        return '```' + language + fileNameOrLanguage;
+      }
+  
+      // code blockの内容
+      var codebody = div.querySelector('.code-body');
+      if (codebody !== null) {
+        var codeTag = codebody.querySelector('code');
+        if (codeTag) {
+          return codeTag.innerText.trim();
+        }
+      }
+      return div.innerText;
+    };
+
     // level小: 文字小 (Scrapbox記法に準ずる)
     // 1 <= level <= MAX_LEVEL
     // (MAX_LEVEL + 1) - level: 「#」の数
@@ -53,10 +116,10 @@
             r += '#';
         }
         return r;
-    }
+    };
 
     var headline = (text='') => {
-        var div = document.createElement("div");
+        var div = document.createElement('div');
         div.innerHTML = text;
         var strongTags = div.querySelectorAll('strong');
         for (var i = 0; i < strongTags.length; i++) {
@@ -69,7 +132,7 @@
     };
 
     var links = (text='') => {
-        var div = document.createElement("div");
+        var div = document.createElement('div');
         div.innerHTML = text;
 
         var aTags = div.querySelectorAll('a');
@@ -92,7 +155,8 @@
 
     var lines = document.querySelector('.lines');
     var pageTitle = lines.querySelector('.line-title .text').innerText;
-    var indentUnitWidthEm = 1.5
+    var indentUnitWidthEm = 1.5;
+    var isCodeBlock = false;
 
     lines = lines.querySelectorAll('.line');
     pageTexts = [];
@@ -118,12 +182,30 @@
         html = html.replace(/<br.+?>/g, '');
         var text = html.replace(/\n/gi, '').replace(/\t/gi, '').trim();
 
+        // コードブロック対応
+        const codeStart = line.querySelector('.code-start');
+        const codeBody = line.querySelector('.code-body');
+        if (codeStart !== null && isCodeBlock === true) {
+          // code-start時にisCodeBlockがtrueの場合、コードブロックが連続していると判断し、コードブロックを閉じる。
+          pageTexts.push('```');
+        }
+        if (isCodeBlock === false && codeStart !== null) {
+          isCodeBlock = true;
+        }
+        if (codeStart !== null || codeBody !== null) {
+          text = codeblock(text);
+          isCodeBlock = true;
+        } else if (isCodeBlock === true) {
+          pageTexts.push('```');
+          isCodeBlock = false;
+        }
+
         text = headline(text);
         text = links(text);
 
         // 箇条書き対応
         var liDot = line.querySelector('.indent-mark');
-        if (liDot !== null) {
+        if (liDot !== null && isCodeBlock === false) {
             // 箇条書きの入れ子構造を取得
             var width = +((liDot.style.width).split('em')[0]);
             var indentLevel = width / indentUnitWidthEm * 2;
