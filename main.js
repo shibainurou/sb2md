@@ -208,7 +208,7 @@
     if (liDot !== null && isCodeBlock === false) {
       // 箇条書きの入れ子構造を取得
       var width = +((liDot.style.width).split('em')[0]);
-      var indentLevel = width / indentUnitWidthEm * 2;
+      var indentLevel = width / indentUnitWidthEm;
       text = markdownIndent(indentLevel) + '- ' + text;
     }
     if (liDot === null && text.length > 0 && text[0] !== '#') {
